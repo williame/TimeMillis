@@ -42,6 +42,8 @@ public class TimeMillisTest
                     instant.toString());
             assertEquals(vector,
                     TimeMillis.toIsoString(timestamp));
+            assertEquals(vector,
+                    TimeMillis.toIsoString(timestamp, new StringBuilder()).toString());
             Assert.assertEquals(vector,
                     instant.atZone(ZoneOffset.UTC).truncatedTo(ChronoUnit.DAYS).withDayOfMonth(1).toInstant().toEpochMilli(),
                     TimeMillis.truncateToMonths(timestamp));

@@ -125,6 +125,15 @@ public class MyBenchmark {
     }
 
     @Benchmark
+    public void testToStringBuilder_TimeMillis() {
+        StringBuilder stringBuilder = new StringBuilder(25 * ITERATIONS);
+        for (int i = 0; i < ITERATIONS; i++) {
+            TimeMillis.toIsoString(timestamps[i], stringBuilder);
+        }
+        timeStrsRet[0] = stringBuilder.toString();
+    }
+
+    @Benchmark
     public void testTruncateDays_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             instantsRet[i] = instants[i].truncatedTo(ChronoUnit.DAYS);
