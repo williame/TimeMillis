@@ -198,4 +198,18 @@ public class MyBenchmark {
             timestampsRet[i] = TimeMillis.truncateToMonths(timestamps[i]);
         }
     }
+
+    @Benchmark
+    public void testCurrentTimeMillis_System() {
+        for (int i = 0; i < ITERATIONS; i++) {
+            timestampsRet[i] = System.currentTimeMillis();
+        }
+    }
+
+    @Benchmark
+    public void testCurrentTimeMillis_Instant() {
+        for (int i = 0; i < ITERATIONS; i++) {
+            instantsRet[i] = Instant.now();
+        }
+    }
 }
