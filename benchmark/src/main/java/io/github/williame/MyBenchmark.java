@@ -25,15 +25,25 @@
 
 package io.github.williame;
 
-import io.github.williame.timemillis.TimeMillis;
-import org.openjdk.jmh.annotations.*;
-
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import io.github.williame.timemillis.TimeMillis;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OperationsPerInvocation;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
 
 @Fork(1)
 @State(Scope.Thread)
@@ -188,5 +198,4 @@ public class MyBenchmark {
             timestampsRet[i] = TimeMillis.truncateToMonths(timestamps[i]);
         }
     }
-
 }
