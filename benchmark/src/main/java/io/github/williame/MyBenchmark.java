@@ -25,15 +25,25 @@
 
 package io.github.williame;
 
-import io.github.williame.timemillis.TimeMillis;
-import org.openjdk.jmh.annotations.*;
-
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import io.github.williame.timemillis.TimeMillis;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OperationsPerInvocation;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
 
 @Fork(1)
 @State(Scope.Thread)
@@ -69,14 +79,14 @@ public class MyBenchmark {
         intsRet = new int[ITERATIONS];
     }
 
-    @Benchmark
+    //@Benchmark
     public void testParse_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             instantsRet[i] = Instant.parse(timeStrs[i]);
         }
     }
 
-    @Benchmark
+    //@Benchmark
     public void testParse_Custom_OffsetDateTime() {
         for (int i = 0; i < ITERATIONS; i++) {
             String timeStr = timeStrs[i];
@@ -110,7 +120,7 @@ public class MyBenchmark {
         }
     }
 
-    @Benchmark
+    //@Benchmark
     public void testToString_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             timeStrsRet[i] = instants[i].toString();
@@ -124,7 +134,7 @@ public class MyBenchmark {
         }
     }
 
-    @Benchmark
+    //@Benchmark
     public void testTruncateDays_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             instantsRet[i] = instants[i].truncatedTo(ChronoUnit.DAYS);
@@ -138,7 +148,7 @@ public class MyBenchmark {
         }
     }
 
-    @Benchmark
+    //@Benchmark
     public void testGetYear_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             intsRet[i] = instants[i].atZone(ZoneOffset.UTC).getYear();
@@ -152,7 +162,7 @@ public class MyBenchmark {
         }
     }
 
-    @Benchmark
+    //@Benchmark
     public void testGetMonth_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             intsRet[i] = instants[i].atZone(ZoneOffset.UTC).getMonthValue();
@@ -166,7 +176,7 @@ public class MyBenchmark {
         }
     }
 
-    @Benchmark
+    //@Benchmark
     public void testTruncateMonth_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             instantsRet[i] = instants[i].atZone(ZoneOffset.UTC).truncatedTo(ChronoUnit.DAYS).withDayOfMonth(1).toInstant();
@@ -179,5 +189,4 @@ public class MyBenchmark {
             timestampsRet[i] = TimeMillis.truncateToMonths(timestamps[i]);
         }
     }
-
 }

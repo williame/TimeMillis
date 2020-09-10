@@ -1,38 +1,58 @@
 package io.github.williame.timemillis;
 
-import java.util.Arrays;
 import java.util.Random;
 
 public final class TimeMillis
 {
     private TimeMillis() {}
 
+    // Returns elapsed months * 32 + dayOfMonth
+    public static int toMonthAndDays(int yearAndDays) {
+        int daysLeft = yearAndDays & 511;
+        // If needed: Adjust for leap year:
+        if((yearAndDays >> 9) % 4 == 0) {
+            return DAYS_TO_ISO_MONTH_DAY_LEAP[daysLeft];
+        }
+        return DAYS_TO_ISO_MONTH_DAY[daysLeft];
+    }
+
+    // Returns year * 512 + daysInYear
+    public static int toYearAndDays(long timestamp) {
+        int dayOfEpoch = dayOfEpoch(timestamp);
+
+        int passedLeapCycles = (dayOfEpoch / 1461);
+        int passedDaysCurrentCycle = (dayOfEpoch % 1461);
+
+        // Adjust running leap year cycle:
+        int year = MIN_YEAR + passedLeapCycles * 4;
+        if(passedDaysCurrentCycle >= 1096) { // 365 + 365 + 366
+            return (year+3) << 9 | (passedDaysCurrentCycle - 1096);
+        } else if(passedDaysCurrentCycle >= 730) { // 365 + 365
+            return (year+2) << 9 | (passedDaysCurrentCycle - 730);
+        } else if(passedDaysCurrentCycle >= 365) { // 365
+            return (year+1) << 9 | (passedDaysCurrentCycle - 365);
+        } else {
+            return year << 9 | passedDaysCurrentCycle;
+        }
+    }
+
     public static String toIsoString(long timestamp) {
-        final long
-                encoded = getEncoding(timestamp),
-                year = (encoded & YEAR_MASK) >> YEAR_SHIFT,
-                month = (encoded & MONTH_MASK) + 1,
-                firstOfMonth = encoded >> TIMESTAMP_SHIFT;
-        timestamp -= firstOfMonth;
-        long reminder = timestamp / 1000;
-        final long millis = timestamp - reminder * 1000;
-        timestamp = reminder;
-        reminder /= 60;
-        final long secs = timestamp - reminder * 60;
-        timestamp = reminder;
-        reminder /= 60;
-        final long minutes = timestamp - reminder * 60;
-        timestamp = reminder;
-        reminder /= 24;
-        final long hours = timestamp - reminder * 24,
-                days = reminder + 1;
+        int yearAndDays = toYearAndDays(timestamp);
+        int monthAndDays = toMonthAndDays(yearAndDays);
+
+        int timeRemainder = (int) (timestamp % MILLIS_IN_DAY);
+        final int millis = timeRemainder % 1000;
+        final int secs = (timeRemainder /= 1000) % 60;
+        final int minutes = (timeRemainder /= 60) % 60;
+        final int hours = (timeRemainder / 60) % 24;
+
         char[] chars = new char[24];
         chars[4] = chars[7] = '-';
         chars[10] = 'T';
         chars[13] = chars[16] = ':';
-        emit(chars, year, 0, 4);
-        emit(chars, month, 5, 7);
-        emit(chars, days, 8, 10);
+        emit(chars, (yearAndDays >> 9), 0, 4);
+        emit(chars, 1 + (monthAndDays >> 5), 5, 7);
+        emit(chars, 1 + (monthAndDays & 31), 8, 10);
         emit(chars, hours, 11, 13);
         emit(chars, minutes, 14, 16);
         emit(chars, secs, 17, 19);
@@ -111,15 +131,17 @@ public final class TimeMillis
     }
 
     public static long truncateToMonths(long timestamp) {
-        return getEncoding(timestamp) >> TIMESTAMP_SHIFT;
+        int yearAndDays = toYearAndDays(timestamp);
+        int monthAndDays = toMonthAndDays(yearAndDays);
+        return of(yearAndDays >> 9, 1 + ( monthAndDays >> 5), 1, 0, 0, 0, 0);
     }
 
     public static long truncateToDays(long timestamp) {
-        return timestamp / MILLIS_IN_DAY * MILLIS_IN_DAY;
+        return  timestamp / MILLIS_IN_DAY * MILLIS_IN_DAY;
     }
 
     public static long truncateToHours(long timestamp) {
-        return timestamp / MILLIS_IN_HOUR * MILLIS_IN_HOUR;
+        return  timestamp / MILLIS_IN_HOUR * MILLIS_IN_HOUR;
     }
 
     public static long truncateToHours(long timestamp, int numOfHours) {
@@ -146,8 +168,7 @@ public final class TimeMillis
 
     // 1 to 365 (or 366 in a leap year)
     public static int dayOfYear(long timestamp) {
-        long startOfYear = MONTHS[(getYear(timestamp) - MIN_YEAR) * 12] >> TIMESTAMP_SHIFT;
-        return (int)((timestamp - startOfYear) / MILLIS_IN_DAY) + 1;
+        return (toYearAndDays(timestamp) & 511) + 1;
     }
 
     // 1 to 7 (Monday to Sunday) following the ISO-8601 standard
@@ -159,17 +180,16 @@ public final class TimeMillis
 
     // 1 to 31
     public static int dayOfMonth(long timestamp) {
-        long startOfMonth = getEncoding(timestamp) >> TIMESTAMP_SHIFT;
-        return (int)((timestamp - startOfMonth) / MILLIS_IN_DAY) + 1;
+        return 1 + (toMonthAndDays(toYearAndDays(timestamp)) & 31);
     }
 
     public static int getYear(long timestamp) {
-        return (int)((getEncoding(timestamp) & YEAR_MASK) >> YEAR_SHIFT);
+        return toYearAndDays(timestamp) >> 9;
     }
 
     // 1 to 12
     public static int getMonth(long timestamp) {
-        return (int)((getEncoding(timestamp) & MONTH_MASK)) + 1;
+        return 1 + (toMonthAndDays(toYearAndDays(timestamp)) >> 5);
     }
 
     // 0 to 23
@@ -211,6 +231,27 @@ public final class TimeMillis
             YEAR_MASK = 0x7ffL << YEAR_SHIFT,
             MAX_TIMESTAMP = (long)Integer.MAX_VALUE * 1000 + 999;
 
+    private static final int[] DAYS_IN_MONTH = new int[]{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    private static final int[] DAYS_IN_MONTH_LEAP = new int[]{ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    /**
+     * Lookup table to transform a single day into the correct ISO 31-day month
+     */
+    private static final int[] DAYS_TO_ISO_MONTH_DAY = new int[365];
+    private static final int[] DAYS_TO_ISO_MONTH_DAY_LEAP = new int[366];
+    static {
+        int ptr1 = 0;
+        int ptr2 = 0;
+        for(int month = 0; month < DAYS_IN_MONTH.length; month++) {
+            for(int x = 0; x < DAYS_IN_MONTH[month]; x++) {
+                DAYS_TO_ISO_MONTH_DAY[ptr1++] = month << 5 | x;
+            }
+            for(int x = 0; x < DAYS_IN_MONTH_LEAP[month]; x++) {
+                DAYS_TO_ISO_MONTH_DAY_LEAP[ptr2++] = month << 5 | x;
+            }
+        }
+    }
+
+
     private static final long[] MONTHS;
     static {
         final int[] daysInMonth = new int[] {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -231,11 +272,6 @@ public final class TimeMillis
         MONTHS[MONTHS.length - 1] = (nextMonth << TIMESTAMP_SHIFT) | (MAX_YEAR << YEAR_SHIFT);  // Jan 2038
     }
 
-    private static long getEncoding(long timestamp) {
-        assert timestamp >= 0 && timestamp < MAX_TIMESTAMP: timestamp;
-        int anchor = Arrays.binarySearch(MONTHS, timestamp << TIMESTAMP_SHIFT);
-        return MONTHS[anchor < 0? -anchor - 2: anchor];
-    }
 
     public static long nextRandomTimestamp(Random random) {
         return Math.abs(random.nextLong()) % MAX_TIMESTAMP;
