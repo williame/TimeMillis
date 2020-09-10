@@ -79,14 +79,14 @@ public class MyBenchmark {
         intsRet = new int[ITERATIONS];
     }
 
-    //@Benchmark
+    @Benchmark
     public void testParse_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             instantsRet[i] = Instant.parse(timeStrs[i]);
         }
     }
 
-    //@Benchmark
+    @Benchmark
     public void testParse_Custom_OffsetDateTime() {
         for (int i = 0; i < ITERATIONS; i++) {
             String timeStr = timeStrs[i];
@@ -120,7 +120,7 @@ public class MyBenchmark {
         }
     }
 
-    //@Benchmark
+    @Benchmark
     public void testToString_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             timeStrsRet[i] = instants[i].toString();
@@ -134,7 +134,16 @@ public class MyBenchmark {
         }
     }
 
-    //@Benchmark
+    @Benchmark
+    public void testToStringBuilder_TimeMillis() {
+        StringBuilder stringBuilder = new StringBuilder(25 * ITERATIONS);
+        for (int i = 0; i < ITERATIONS; i++) {
+            TimeMillis.toIsoString(timestamps[i], stringBuilder);
+        }
+        timeStrsRet[0] = stringBuilder.toString();
+    }
+
+    @Benchmark
     public void testTruncateDays_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             instantsRet[i] = instants[i].truncatedTo(ChronoUnit.DAYS);
@@ -148,7 +157,7 @@ public class MyBenchmark {
         }
     }
 
-    //@Benchmark
+    @Benchmark
     public void testGetYear_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             intsRet[i] = instants[i].atZone(ZoneOffset.UTC).getYear();
@@ -162,7 +171,7 @@ public class MyBenchmark {
         }
     }
 
-    //@Benchmark
+    @Benchmark
     public void testGetMonth_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             intsRet[i] = instants[i].atZone(ZoneOffset.UTC).getMonthValue();
@@ -176,7 +185,7 @@ public class MyBenchmark {
         }
     }
 
-    //@Benchmark
+    @Benchmark
     public void testTruncateMonth_Instant() {
         for (int i = 0; i < ITERATIONS; i++) {
             instantsRet[i] = instants[i].atZone(ZoneOffset.UTC).truncatedTo(ChronoUnit.DAYS).withDayOfMonth(1).toInstant();

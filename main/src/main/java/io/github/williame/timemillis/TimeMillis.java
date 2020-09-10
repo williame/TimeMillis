@@ -2,8 +2,8 @@ package io.github.williame.timemillis;
 
 import java.util.Random;
 
-public final class TimeMillis
-{
+public final class TimeMillis {
+
     private TimeMillis() {}
 
     // Returns elapsed months * 32 + dayOfMonth
@@ -37,6 +37,18 @@ public final class TimeMillis
     }
 
     public static String toIsoString(long timestamp) {
+        char[] chars = new char[24];
+        int len = doToIsoString(chars, timestamp);
+        return new String(chars, 0, len);
+    }
+
+    public static StringBuilder toIsoString(long timestamp, StringBuilder out) {
+        char[] chars = new char[24];
+        int len = doToIsoString(chars, timestamp);
+        return out.append(chars, 0, len);
+    }
+
+    private static int doToIsoString(char[] chars, long timestamp) {
         int yearAndDays = toYearAndDays(timestamp);
         int monthAndDays = toMonthAndDays(yearAndDays);
 
@@ -46,7 +58,6 @@ public final class TimeMillis
         final int minutes = (timeRemainder /= 60) % 60;
         final int hours = (timeRemainder / 60) % 24;
 
-        char[] chars = new char[24];
         chars[4] = chars[7] = '-';
         chars[10] = 'T';
         chars[13] = chars[16] = ':';
@@ -60,10 +71,10 @@ public final class TimeMillis
             chars[19] = '.';
             emit(chars, millis, 20, 23);
             chars[23] = 'Z';
-            return new String(chars, 0, 24);
+            return 24;
         } else {
             chars[19] = 'Z';
-            return new String(chars, 0, 20);
+            return 20;
         }
     }
 
