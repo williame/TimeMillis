@@ -6,36 +6,6 @@ public final class TimeMillis {
 
     private TimeMillis() {}
 
-    // Returns elapsed months * 32 + dayOfMonth
-    public static int toMonthAndDays(int yearAndDays) {
-        int daysLeft = yearAndDays & 511;
-        // If needed: Adjust for leap year:
-        if((yearAndDays >> 9) % 4 == 0) {
-            return DAYS_TO_ISO_MONTH_DAY_LEAP[daysLeft];
-        }
-        return DAYS_TO_ISO_MONTH_DAY[daysLeft];
-    }
-
-    // Returns year * 512 + daysInYear
-    public static int toYearAndDays(long timestamp) {
-        int dayOfEpoch = dayOfEpoch(timestamp);
-
-        int passedLeapCycles = (dayOfEpoch / 1461);
-        int passedDaysCurrentCycle = (dayOfEpoch % 1461);
-
-        // Adjust running leap year cycle:
-        int year = MIN_YEAR + passedLeapCycles * 4;
-        if(passedDaysCurrentCycle >= 1096) { // 365 + 365 + 366
-            return (year+3) << 9 | (passedDaysCurrentCycle - 1096);
-        } else if(passedDaysCurrentCycle >= 730) { // 365 + 365
-            return (year+2) << 9 | (passedDaysCurrentCycle - 730);
-        } else if(passedDaysCurrentCycle >= 365) { // 365
-            return (year+1) << 9 | (passedDaysCurrentCycle - 365);
-        } else {
-            return year << 9 | passedDaysCurrentCycle;
-        }
-    }
-
     public static String toIsoString(long timestamp) {
         char[] chars = new char[24];
         int len = doToIsoString(chars, timestamp);
@@ -170,7 +140,7 @@ public final class TimeMillis {
     }
 
     public static long truncatedToSeconds(long timestamp) {
-        return timestamp / 1000 * 1000;
+        return timestamp / MILLIS * MILLIS;
     }
 
     public static int dayOfEpoch(long timestamp) {
@@ -228,6 +198,41 @@ public final class TimeMillis {
         return getMilliseconds(timestamp) * 1_000_000;
     }
 
+    // Returns elapsed months * 32 + dayOfMonth
+    private static int toMonthAndDays(int yearAndDays) {
+        int year = yearAndDays >> 9, daysLeft = yearAndDays & 511;
+        // If needed: Adjust for leap year:
+        if((year & 3) == 0) {
+            if (daysLeft == 31 + 28) {
+                return (1 << 5) | 28;
+            } else if (daysLeft > 31 + 28) {
+                daysLeft--;
+            }
+        }
+        return DAYS_TO_ISO_MONTH_DAY[daysLeft];
+    }
+
+    // Returns year * 512 + daysInYear
+    private static int toYearAndDays(long timestamp) {
+        int dayOfEpoch = dayOfEpoch(timestamp);
+
+        int passedLeapCycles = (dayOfEpoch / 1461);
+        int passedDaysCurrentCycle = dayOfEpoch - (passedLeapCycles * 1461);
+
+        // Adjust running leap year cycle:
+        int yearCycle = MIN_YEAR + passedLeapCycles * 4;
+        if(passedDaysCurrentCycle >= 1096) { // 365 + 365 + 366
+            return ((yearCycle + 3) << 9) | (passedDaysCurrentCycle - 1096);
+        } else if(passedDaysCurrentCycle >= 730) { // 365 + 365
+            return ((yearCycle + 2) << 9) | (passedDaysCurrentCycle - 730);
+        } else if(passedDaysCurrentCycle >= 365) { // 365
+            return ((yearCycle + 1) << 9) | (passedDaysCurrentCycle - 365);
+        } else {
+            return (yearCycle << 9) | passedDaysCurrentCycle;
+        }
+    }
+
+
     private static final int
             YEAR_SHIFT = 5,
             TIMESTAMP_SHIFT = YEAR_SHIFT + 11,
@@ -243,21 +248,15 @@ public final class TimeMillis {
             MAX_TIMESTAMP = (long)Integer.MAX_VALUE * 1000 + 999;
 
     private static final int[] DAYS_IN_MONTH = new int[]{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-    private static final int[] DAYS_IN_MONTH_LEAP = new int[]{ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
     /**
      * Lookup table to transform a single day into the correct ISO 31-day month
      */
     private static final int[] DAYS_TO_ISO_MONTH_DAY = new int[365];
-    private static final int[] DAYS_TO_ISO_MONTH_DAY_LEAP = new int[366];
     static {
         int ptr1 = 0;
-        int ptr2 = 0;
         for(int month = 0; month < DAYS_IN_MONTH.length; month++) {
             for(int x = 0; x < DAYS_IN_MONTH[month]; x++) {
-                DAYS_TO_ISO_MONTH_DAY[ptr1++] = month << 5 | x;
-            }
-            for(int x = 0; x < DAYS_IN_MONTH_LEAP[month]; x++) {
-                DAYS_TO_ISO_MONTH_DAY_LEAP[ptr2++] = month << 5 | x;
+                DAYS_TO_ISO_MONTH_DAY[ptr1++] = (month << 5) | x;
             }
         }
     }
@@ -265,7 +264,6 @@ public final class TimeMillis {
 
     private static final long[] MONTHS;
     static {
-        final int[] daysInMonth = new int[] {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
         long nextMonth = 0;
         MONTHS = new long[(MAX_YEAR - MIN_YEAR) * 12 + 1];
         for (int year = MIN_YEAR, i = 0; year < MAX_YEAR; year++) {
@@ -277,7 +275,7 @@ public final class TimeMillis {
                 assert (int)((encoded & YEAR_MASK) >> YEAR_SHIFT) == year;
                 assert (int)(encoded & MONTH_MASK) == month;
                 MONTHS[i++] = encoded;
-                nextMonth += (daysInMonth[month] + (isLeapYear && month == 1? 1: 0)) * MILLIS_IN_DAY;
+                nextMonth += (DAYS_IN_MONTH[month] + (isLeapYear && month == 1? 1: 0)) * MILLIS_IN_DAY;
             }
         }
         MONTHS[MONTHS.length - 1] = (nextMonth << TIMESTAMP_SHIFT) | (MAX_YEAR << YEAR_SHIFT);  // Jan 2038

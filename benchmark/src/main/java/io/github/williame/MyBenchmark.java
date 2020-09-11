@@ -200,6 +200,65 @@ public class MyBenchmark {
     }
 
     @Benchmark
+    public void testGetMonthDay_Instant() {
+        for (int i = 0; i < ITERATIONS; i++) {
+            intsRet[i] = instants[i].atZone(ZoneOffset.UTC).getDayOfMonth();
+        }
+    }
+
+    @Benchmark
+    public void testGetMonthDay_TimeMillis() {
+        for (int i = 0; i < ITERATIONS; i++) {
+            intsRet[i] = TimeMillis.dayOfMonth(timestamps[i]);
+        }
+    }
+
+
+    @Benchmark
+    public void testGetHour_Instant() {
+        for (int i = 0; i < ITERATIONS; i++) {
+            intsRet[i] = instants[i].atZone(ZoneOffset.UTC).getHour();
+        }
+    }
+
+    @Benchmark
+    public void testGetHour_TimeMillis() {
+        for (int i = 0; i < ITERATIONS; i++) {
+            intsRet[i] = TimeMillis.getHour(timestamps[i]);
+        }
+    }
+
+    @Benchmark
+    public void testTruncateHour_Instant() {
+        for (int i = 0; i < ITERATIONS; i++) {
+            instantsRet[i] = instants[i].truncatedTo(ChronoUnit.HOURS);
+        }
+    }
+
+    @Benchmark
+    public void testTruncateHour_TimeMillis() {
+        for (int i = 0; i < ITERATIONS; i++) {
+            timestampsRet[i] = TimeMillis.truncateToHours(timestamps[i]);
+        }
+    }
+
+    @Benchmark
+    public void testOf_Instant() {
+        for (int i = 0; i < ITERATIONS; i++) {
+            int j = ((int)timestamps[i] & 0x7) + 1;
+            instantsRet[i] = OffsetDateTime.of(1970 + j, j, j, j, j, j, j * 1000_0000, ZoneOffset.UTC).toInstant();
+        }
+    }
+
+    @Benchmark
+    public void testOf_TimeMillis() {
+        for (int i = 0; i < ITERATIONS; i++) {
+            int j = ((int)timestamps[i] & 0x7) + 1;
+            timestampsRet[i] = TimeMillis.of(1970 + j, j, j, j, j, j, j);
+        }
+    }
+
+    @Benchmark
     public void testCurrentTimeMillis_System() {
         for (int i = 0; i < ITERATIONS; i++) {
             timestampsRet[i] = System.currentTimeMillis();
