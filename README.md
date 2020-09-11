@@ -21,13 +21,13 @@ than it is to use the Instant's parse function directly!
 
 | Action | Instant code | TimeMillis code | Instant time | TimeMillis time | speedup |
 | --- | --- | --- | ---: | ---: | ---: |
-| parse string | `Instant.parse(s)` | `TimeMillis.parse(s)` | 1258 ns | 35 ns | 37x |
-| to string | `instant.toString()` | `TimeMillis.toString(ts)` | 330 ns | 63 ns | 5x |
-| of fields | `OffsetDateTime.of(y, m, d, .., UTC)` `.toInstant()` | `TimeMillis.of(y, m, d, ...)` | 33 ns | 3 ns | 11x |
-| get year | `instant.atZone(UTC).getYear()` | `TimeMillis.getYear(ts)` | 39 ns | 2.5 ns | 15x |
-| get month | `instant.atZone(UTC).getMonth()` | `TimeMillis.getMonth(ts)` | 39 ns | 4.3 ns | 9x |
-| get day | `instant.atZone(UTC).getDayOfMonth()` | `TimeMillis.getDayOfMonth(ts)` | 40 ns | 4.3 ns | 9x |
-| get hour | `instant.atZone(UTC).getHour()` | `TimeMillis.getHour(ts)` | 38 ns | 1.3 ns | 29x |
-| truncate month | `instant.atZone(UTC).truncatedTo(DAYS)` `.withDayOfMonth(1).toInstant()` | `TimeMillis.truncateToMonths(ts)` | 110 ns | 6.5 ns | 17x |
-| truncate day | `instant.truncatedTo(DAYS)` | `TimeMillis.truncateToDays(ts)` | 38 ns | 0.9 ns | 42x |
-| truncate hour | `instant.truncatedTo(HOURS)` | `TimeMillis.truncateToHours(ts)` | 38 ns | 0.9 ns | 42x |
+| parse string | `Instant` `.parse(s)` | `TimeMillis` `.parse(s)` | 1258 ns | 35 ns | 37x |
+| to string | `instant` `.toString()` | `TimeMillis` `.toString(ts)` | 330 ns | 63 ns | 5x |
+| of fields | `OffsetDateTime` `.of(y, m, d, .., UTC)` `.toInstant()` | `TimeMillis` `.of(y, m, d, ...)` | 33 ns | 3 ns | 11x |
+| get year | `instant` `.atZone(UTC)` `.getYear()` | `TimeMillis` `.getYear(ts)` | 39 ns | 2.5 ns | 15x |
+| get month | `instant` `.atZone(UTC)` `.getMonth()` | `TimeMillis` `.getMonth(ts)` | 39 ns | 4.3 ns | 9x |
+| get day | `instant` `.atZone(UTC)` `.getDayOfMonth()` | `TimeMillis` `.getDayOfMonth(ts)` | 40 ns | 4.3 ns | 9x |
+| get hour | `instant` `.atZone(UTC)` `.getHour()` | `TimeMillis` `.getHour(ts)` | 38 ns | 1.3 ns | 29x |
+| truncate month | `instant` `.atZone(UTC)` `.truncatedTo(DAYS)` `.withDayOfMonth(1)` `.toInstant()` | `TimeMillis` `.truncateToMonths(ts)` | 110 ns | 6.5 ns | 17x |
+| truncate day | `instant` `.truncatedTo(DAYS)` | `TimeMillis` `.truncateToDays(ts)` | 38 ns | 0.9 ns | 42x |
+| truncate hour | `instant` `.truncatedTo(HOURS)` | `TimeMillis` `.truncateToHours(ts)` | 38 ns | 0.9 ns | 42x |
