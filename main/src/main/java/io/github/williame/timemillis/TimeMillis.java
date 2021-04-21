@@ -8,52 +8,14 @@ public final class TimeMillis {
 
     public static String toIsoString(long timestamp) {
         char[] chars = new char[24];
-        int len = doToIsoString(chars, timestamp);
-        return new String(chars, 0, len);
+        long secs = timestamp / MILLIS;
+        int length = TimeSecs.doToDateTime(chars, (int) secs, (int) (timestamp - (secs * MILLIS)), 'T');
+        chars[length++] = 'Z';
+        return new String(chars, 0, length);
     }
 
     public static StringBuilder toIsoString(long timestamp, StringBuilder out) {
-        char[] chars = new char[24];
-        int len = doToIsoString(chars, timestamp);
-        return out.append(chars, 0, len);
-    }
-
-    private static int doToIsoString(char[] chars, long timestamp) {
-        int yearAndDays = toYearAndDays(timestamp);
-        int monthAndDays = toMonthAndDays(yearAndDays);
-
-        int timeRemainder = (int) (timestamp % MILLIS_IN_DAY);
-        final int millis = timeRemainder % 1000;
-        final int secs = (timeRemainder /= 1000) % 60;
-        final int minutes = (timeRemainder /= 60) % 60;
-        final int hours = (timeRemainder / 60) % 24;
-
-        chars[4] = chars[7] = '-';
-        chars[10] = 'T';
-        chars[13] = chars[16] = ':';
-        emit(chars, (yearAndDays >> 9), 0, 4);
-        emit(chars, 1 + (monthAndDays >> 5), 5, 7);
-        emit(chars, 1 + (monthAndDays & 31), 8, 10);
-        emit(chars, hours, 11, 13);
-        emit(chars, minutes, 14, 16);
-        emit(chars, secs, 17, 19);
-        if (millis > 0) {
-            chars[19] = '.';
-            emit(chars, millis, 20, 23);
-            chars[23] = 'Z';
-            return 24;
-        } else {
-            chars[19] = 'Z';
-            return 20;
-        }
-    }
-
-    private static void emit(char[] chars, long num, int start, int stop) {
-        for (int i = stop - 1; i >= start; i--) {
-            long nextNum = num / 10;
-            chars[i] = (char)('0' + (num - nextNum * 10));
-            num = nextNum;
-        }
+        return TimeSecs.toIsoDateTime((int) (timestamp / MILLIS), (int) (timestamp % MILLIS), out);
     }
 
     public static long parse(CharSequence timestamp) {
@@ -199,7 +161,7 @@ public final class TimeMillis {
     }
 
     // Returns elapsed months * 32 + dayOfMonth
-    private static int toMonthAndDays(int yearAndDays) {
+    static int toMonthAndDays(int yearAndDays) {
         int year = yearAndDays >> 9, daysLeft = yearAndDays & 511;
         // If needed: Adjust for leap year:
         if((year & 3) == 0) {
@@ -214,8 +176,11 @@ public final class TimeMillis {
 
     // Returns year * 512 + daysInYear
     private static int toYearAndDays(long timestamp) {
-        int dayOfEpoch = dayOfEpoch(timestamp);
+        return toYearAndDays(dayOfEpoch(timestamp));
+    }
 
+    // Returns year * 512 + daysInYear
+    static int toYearAndDays(int dayOfEpoch) {
         int passedLeapCycles = (dayOfEpoch / 1461);
         int passedDaysCurrentCycle = dayOfEpoch - (passedLeapCycles * 1461);
 
@@ -232,8 +197,7 @@ public final class TimeMillis {
         }
     }
 
-
-    private static final int
+    static final int
             YEAR_SHIFT = 5,
             TIMESTAMP_SHIFT = YEAR_SHIFT + 11,
             MIN_YEAR = 1970,
@@ -242,7 +206,8 @@ public final class TimeMillis {
             MILLIS = 1000,
             MILLIS_IN_MINUTE = 60 * MILLIS,
             MILLIS_IN_HOUR = MILLIS_IN_MINUTE * 60,
-            MILLIS_IN_DAY = MILLIS_IN_HOUR * 24,
+            MILLIS_IN_DAY = MILLIS_IN_HOUR * 24;
+    static final long
             MONTH_MASK = 0xfL,
             YEAR_MASK = 0x7ffL << YEAR_SHIFT,
             MAX_TIMESTAMP = (long)Integer.MAX_VALUE * 1000 + 999;
