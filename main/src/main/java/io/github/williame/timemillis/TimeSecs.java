@@ -1,11 +1,27 @@
 package io.github.williame.timemillis;
 
+import java.time.Instant;
+
 public final class TimeSecs {
 
     private TimeSecs() {}
 
     public static StringBuilder toDateTime(int secs, int millis, StringBuilder out) {
         return toDateTime(secs, millis, ' ', out);
+    }
+
+    public static String toIsoString(Instant instant) {
+        char[] chars = new char[24];
+        int length = doToDateTime(chars, (int) instant.getEpochSecond(), TimeMillis.getMilliseconds(instant), 'T');
+        chars[length++] = 'Z';
+        return new String(chars, 0, length);
+    }
+
+    public static StringBuilder toIsoString(Instant instant, StringBuilder out) {
+        char[] chars = new char[24];
+        int length = doToDateTime(chars, (int) instant.getEpochSecond(), TimeMillis.getMilliseconds(instant), 'T');
+        chars[length++] = 'Z';
+        return out.append(chars, 0, length);
     }
 
     public static StringBuilder toIsoDateTime(int secs, int millis, StringBuilder out) {
@@ -36,9 +52,17 @@ public final class TimeSecs {
     }
 
     public static StringBuilder toTime(int secs, StringBuilder out) {
-        char[] chars = new char[8];
+        return toTime(secs, 0, out);
+    }
+
+    public static StringBuilder toTime(int secs, int millis, StringBuilder out) {
+        char[] chars = new char[12];
         doToHHMMSS(chars, 0, secs);
-        return out.append(chars);
+        if (millis > 0) {
+            chars[8] = '.';
+            emit(chars, millis, 9, 12);
+        }
+        return out.append(chars, 0, millis > 0 ? 12 : 8);
     }
 
     private static void emit(char[] chars, long num, int start, int stop) {
@@ -67,11 +91,11 @@ public final class TimeSecs {
         emit(chars, seconds, ofs + 6, ofs + 8);
     }
 
-    public static int dayOfEpoch(int secs) {
+    private static int dayOfEpoch(int secs) {
         return secs / SECS_IN_DAY;
     }
 
-    static final int
+    private static final int
             SECS_IN_MINUTE = 60,
             SECS_IN_HOUR = SECS_IN_MINUTE * 60,
             SECS_IN_DAY = SECS_IN_HOUR * 24;

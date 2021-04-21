@@ -41,6 +41,8 @@ public class TimeMillisTest
             assertEquals(vector,
                     instant.toString());
             assertEquals(vector,
+                    TimeSecs.toIsoString(instant));
+            assertEquals(vector,
                     TimeMillis.toIsoString(timestamp));
             assertEquals(vector,
                     TimeMillis.toIsoString(timestamp, new StringBuilder()).toString());

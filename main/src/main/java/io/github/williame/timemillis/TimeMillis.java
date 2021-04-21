@@ -1,5 +1,6 @@
 package io.github.williame.timemillis;
 
+import java.time.Instant;
 import java.util.Random;
 
 public final class TimeMillis {
@@ -155,6 +156,11 @@ public final class TimeMillis {
         return (int)(timestamp % MILLIS);
     }
 
+    public static int getMilliseconds(Instant instant) {
+        int nano = instant.getNano();
+        return nano == 0 ? 0: nano / NANOS_IN_MILLIS;
+    }
+
     // 0 to 999_999_999
     public static int getNanoseconds(long timestamp) {
         return getMilliseconds(timestamp) * 1_000_000;
@@ -197,7 +203,8 @@ public final class TimeMillis {
         }
     }
 
-    static final int
+    private static final int
+            NANOS_IN_MILLIS = 1_000_000,
             YEAR_SHIFT = 5,
             TIMESTAMP_SHIFT = YEAR_SHIFT + 11,
             MIN_YEAR = 1970,
@@ -206,8 +213,7 @@ public final class TimeMillis {
             MILLIS = 1000,
             MILLIS_IN_MINUTE = 60 * MILLIS,
             MILLIS_IN_HOUR = MILLIS_IN_MINUTE * 60,
-            MILLIS_IN_DAY = MILLIS_IN_HOUR * 24;
-    static final long
+            MILLIS_IN_DAY = MILLIS_IN_HOUR * 24,
             MONTH_MASK = 0xfL,
             YEAR_MASK = 0x7ffL << YEAR_SHIFT,
             MAX_TIMESTAMP = (long)Integer.MAX_VALUE * 1000 + 999;
